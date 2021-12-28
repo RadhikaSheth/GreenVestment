@@ -3,14 +3,15 @@ import {Grid, Typography} from '@mui/material';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
 const HeaderGrid = styled(Grid)(() => ({
-    width: '100vw',
+    // width: '100vw',
     display: 'flex',
     paddingLeft: '5vw',
-    paddingTop: '5vh'
+    paddingTop: '3vh',
+    backgroundColor:"#00695C"
 }))
 
 const StyledTitle = styled(Typography)(() => ({
-    color: '#009e60'
+    color: 'white'
 }))
 export default function Header(){
     return(

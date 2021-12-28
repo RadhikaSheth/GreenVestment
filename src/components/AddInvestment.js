@@ -8,6 +8,7 @@ import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import Box from '@mui/material/Box';
 import { grey } from '@mui/material/colors';
 import Modal from '@mui/material/Modal';
+import Axios from 'axios';
 const finnhub = require('finnhub');
 const api_key = finnhub.ApiClient.instance.authentications['api_key'];
 api_key.apiKey = "sandbox_c6v9maaad3i9k7i771jg";
@@ -19,10 +20,10 @@ const style = {
     left: '50%',
     transform: 'translate(-50%, -50%)',
     width: 500,
-    height: 400,
+    height: 370,
     bgcolor: 'background.paper',
     p: 4,
-    borderRadius: '15px'
+    borderRadius: '30px'
 
 };
 
@@ -33,6 +34,7 @@ const StyledGrid = styled(Grid)(() => ({
 
 const ColorButton = styled(Button)(({ theme }) => ({
     color: "white",
+    borderRadius:'30px',
     backgroundColor: grey[900],
     '&:hover': {
         backgroundColor: grey[800],
@@ -40,31 +42,18 @@ const ColorButton = styled(Button)(({ theme }) => ({
 }));
 
 
-export default function AddInvestment() {
+export default function AddInvestment({AppendInvestment}) {
     const [modal, setmodal] = useState(false);
     const [open, setOpen] = useState(false);
     const [options, setOptions] = useState([]);
     const [amount, setAmount] = useState(0);
     const [investments,setList] = useState([]);
     const [selectedInv, setInv] = useState();
+    const [data, setData] = useState([]);
     const loading = open && options.length === 0;
 
-    const onChangeHandle = async value => {
-        api(value);
-    };
-
-    const onChangeAmount = async value => {
-        setAmount(value);
-    }
-
-    useEffect(() => {
-        if (!open) {
-            setOptions([]);
-        }
-    }, [open]);
-
     const ChangeInvestment = () =>{
-        investments.push(selectedInv);
+        AppendInvestment(selectedInv);
         handleClose();
     }
     function debounce(func, wait, immediate) {
@@ -82,28 +71,22 @@ export default function AddInvestment() {
         };
     }
 
-    const api = useCallback(
-        debounce((value) => {
-            finnhubClient.symbolSearch(value, (error, data, response) => {
-                console.log("here")
-                var array = [];
-                data.result.map((item) => {
-                    array.push(item.symbol);
-                })
-                setOptions(array);
-            });
-        }, 200),
-        []
-    );
-
     useEffect(() => {
-        finnhubClient.symbolSearch("", (error, data, response) => {
-            var array = [];
-            data.result.map((item) => {
-                array.push(item.symbol);
+        Axios.get('http://127.0.0.1:8000/api/getData/')
+        .then((response)=>{
+            var tickerList = []
+            response.data.map((item)=>{
+                tickerList.push(item.symbol);
             })
-            setOptions(array);
+            setData(response.data);
+            setOptions(tickerList);
+        })
+        finnhubClient.stockCandles("RELIANCE.NS", "W", parseInt((new Date('2020.12.27').getTime() / 1000).toFixed(0)), parseInt((new Date('2021.12.27').getTime() / 1000).toFixed(0)), (error, data, response) => {
+            console.log(data.c)
+            var diff = data.c[data.c.length - 1] - data.c[0]
+            console.log(diff)
         });
+        
     }, [])
 
     const handleOpen = () => setmodal(true);
@@ -147,11 +130,6 @@ export default function AddInvestment() {
                                 label="Add you investments"
                                 variant="outlined"
                                 color="success"
-                                onChange={ev => {
-                                    if (ev.target.value !== "" || ev.target.value !== null) {
-                                        onChangeHandle(ev.target.value);
-                                    }
-                                }}
                                 InputProps={{
                                     ...params.InputProps,
                                     endAdornment: (
@@ -165,17 +143,6 @@ export default function AddInvestment() {
                                 }}
                             />
                         )}
-                    />
-                    <TextField
-                        label="Add amount"
-                        variant="outlined"
-                        color="success"
-                        style={{ width: "100%" }}
-                        onChange={ev => {
-                            if (ev.target.value !== "" || ev.target.value !== null) {
-                                onChangeAmount(ev.target.value);
-                            }
-                        }}
                     />
                     <ColorButton variant="contained" onClick={ChangeInvestment}>
                         Add
